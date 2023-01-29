@@ -39,6 +39,8 @@ struct options {
     const char *png;
 };
 
+int g_animation_frame;
+
 static void
 draw (cairo_t *cr, struct options *options)
 {
@@ -80,6 +82,7 @@ draw_event (GtkWidget *w, cairo_t *cr, struct options *options)
     cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_paint (cr);
 
+    cairo_translate (cr, g_animation_frame / 10.0, 0);
     draw (cr, options);
 
     if (options->png) {
@@ -124,6 +127,16 @@ size_request (GtkWidget *w, GtkRequisition *req , struct options *options)
 
     req->width = extents.width + 2 * options->PAD;
     req->height = extents.height + 2 * options->PAD;
+}
+
+gint timer_callback (gpointer data)
+{
+    GtkWidget *widget = (GtkWidget *)data;
+    g_animation_frame++;
+    if (g_animation_frame > 100)
+	g_animation_frame = 0;
+    gtk_widget_queue_draw (widget);
+    return 1;
 }
 
 int
@@ -174,6 +187,8 @@ main (int argc, char **argv)
 		      G_CALLBACK (draw_event), &options);
     g_signal_connect (window, "delete-event",
 		      G_CALLBACK (gtk_main_quit), NULL);
+
+    g_timeout_add (16, timer_callback, window);
 
     gtk_window_present (GTK_WINDOW (window));
     gtk_main ();
