@@ -75,25 +75,21 @@ draw (cairo_t *cr, struct options *options)
 }
 
 static gboolean
-expose_event (GtkWidget *w, GdkEventExpose *ev, struct options *options)
+draw_event (GtkWidget *w, cairo_t *cr, struct options *options)
 {
-    cairo_t *cr;
-
-    cr = gdk_cairo_create (w->window);
-
     cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_paint (cr);
 
     draw (cr, options);
 
-    cairo_destroy (cr);
-
     if (options->png) {
 	cairo_surface_t *image;
+	GtkAllocation allocation;
+	gtk_widget_get_allocation (w, &allocation);
 
 	image = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
-		                            w->allocation.width,
-					    w->allocation.height);
+		                            allocation.width,
+					    allocation.height);
 	cr = cairo_create (image);
 	cairo_set_source_rgb (cr, 1, 1, 1);
 	cairo_paint (cr);
@@ -174,8 +170,8 @@ main (int argc, char **argv)
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     g_signal_connect (window, "size-request",
 		      G_CALLBACK (size_request), &options);
-    g_signal_connect (window, "expose-event",
-		      G_CALLBACK (expose_event), &options);
+    g_signal_connect (window, "draw",
+		      G_CALLBACK (draw_event), &options);
     g_signal_connect (window, "delete-event",
 		      G_CALLBACK (gtk_main_quit), NULL);
 
